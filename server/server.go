@@ -2,12 +2,15 @@
 package server
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 type Server struct {
@@ -36,4 +39,30 @@ func New(opts Options) *Server {
 			WriteTimeout:      5 * time.Second,
 		},
 	}
+}
+
+func (s *Server) Start() error {
+	s.SetupRoutes()
+
+	fmt.Println("Starting on", s.address)
+
+	if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("Error Starting Server: %w", err)
+	}
+	return nil
+}
+
+func (s *Server) Stop() error {
+	fmt.Println("Stop Server...")
+	fmt.Println("Starting on", s.address)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
+	defer cancel()
+
+	if err := s.server.Shutdown(ctx); err != nil {
+		return fmt.Errorf("Error stopping server: %w", err)
+	}
+
+	return nil
 }
