@@ -1,3 +1,7 @@
 package server
 
-func (s *Server) SetupRoutes() {}
+import "canvas/handlers"
+
+func (s *Server) SetupRoutes() {
+	handlers.Health(s.mux)
+}

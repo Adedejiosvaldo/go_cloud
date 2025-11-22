@@ -19,6 +19,6 @@ func TestServer_Start(t *testing.T) {
 
 		resp, err := http.Get("http://localhost:8081")
 		is.NoErr(err)
-		is.Equal(http.StatusNotFound, resp.Status)
+		is.Equal(http.StatusNotFound, resp.StatusCode)
 	})
 }
