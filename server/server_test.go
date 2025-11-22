@@ -1,5 +1,24 @@
 package server_test
 
-import "testing"
+import (
+	"canvas/integrationtest"
+	"net/http"
+	"testing"
 
-func TestServer_Start(t *testing.T) {}
+	"github.com/matryer/is"
+)
+
+func TestServer_Start(t *testing.T) {
+	integrationtest.SkipIfShort(t)
+
+	t.Run("Starts the server and listens for request", func(t *testing.T) {
+		is := is.New(t)
+
+		cleanup := integrationtest.CreateServer()
+		defer cleanup()
+
+		resp, err := http.Get("http://localhost:8081")
+		is.NoErr(err)
+		is.Equal(http.StatusNotFound, resp.Status)
+	})
+}
