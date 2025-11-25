@@ -8,6 +8,7 @@ import (
 
 func Health(mux chi.Router) {
 	mux.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-
+		// ok, _ := w.Write([]byte("Health"))
+		w.Write([]byte("Health"))
 	})
 }

@@ -15,7 +15,12 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// release is set through the linker at build time, generally from a git sha.
+// Used for logging and error reporting.
+var release string
+
 func main() {
+
 	os.Exit(start())
 }
 
@@ -28,13 +33,16 @@ func start() int {
 		return 1
 	}
 
+	log = log.With(zap.String("release", release))
+
 	defer func() {
 		_ = log.Sync()
 	}()
 
 	host := getStringOrDefaultValue("HOST", "localhost")
 	port := getIntOrDefaultValue("PORT", 8080)
-	s := server.New(server.Options{Host: host, Port: port})
+
+	s := server.New(server.Options{Host: host, Port: port, Log: log})
 
 	// That function makes sure to cancel the returned context if it receives one of the signals we have asked for.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
@@ -79,7 +87,7 @@ func createLogger(env string) (*zap.Logger, error) {
 	switch env {
 	case "production":
 		return zap.NewProduction()
-	case "developement":
+	case "development":
 		return zap.NewDevelopment()
 	default:
 		return zap.NewNop(), nil
