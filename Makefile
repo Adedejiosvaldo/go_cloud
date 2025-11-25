@@ -1,4 +1,4 @@
-.PHONY: cover start test test-integration
+.PHONY: docker docker-run cover start test test-integration
 
 cover:
 	go tool cover -html=cover.out
@@ -11,3 +11,9 @@ test:
 
 test-integration:
 	go test -coverprofile=cover.out -p 1 ./...
+
+docker:
+	docker build -t go-cloud .
+
+docker-run:
+	docker run -p 8081:8080 -e HOST="" go-cloud
