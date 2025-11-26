@@ -39,7 +39,7 @@ func start() int {
 		_ = log.Sync()
 	}()
 
-	host := getStringOrDefaultValue("HOST", "localhost")
+	host := getStringOrDefaultValue("HOST", "")
 	port := getIntOrDefaultValue("PORT", 8080)
 
 	s := server.New(server.Options{Host: host, Port: port, Log: log})
