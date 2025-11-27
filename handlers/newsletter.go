@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"canvas/model"
+	"canvas/views"
 	"context"
 	"net/http"
 
@@ -25,5 +26,11 @@ func NewsLetterSignup(mux chi.Router, s signupper) {
 		}
 
 		http.Redirect(w, r, "/newsletter/thanks", http.StatusFound)
+	})
+}
+
+func NewsletterThanks(mux chi.Router) {
+	mux.Get("/newsletter/thanks", func(w http.ResponseWriter, r *http.Request) {
+		_ = views.NewsletterThanksPage("/newsletter/thanks").Render(w)
 	})
 }
