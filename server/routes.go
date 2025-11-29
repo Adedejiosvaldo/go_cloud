@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Server) SetupRoutes() {
-	handlers.Health(s.mux)
+	handlers.Health(s.mux, s.database)
 
 	handlers.FrontPage(s.mux)
 
