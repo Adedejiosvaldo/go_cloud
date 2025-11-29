@@ -90,3 +90,14 @@ func (d *Database) createDataSourceName(withPassword bool) string {
 	}
 	return fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=disable", d.user, password, d.host, d.port, d.name)
 }
+
+func (d *Database) Ping(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	if err := d.DB.PingContext(ctx); err != nil {
+		return err
+	}
+	_, err := d.DB.ExecContext(ctx, `select 1`)
+	return err
+}
