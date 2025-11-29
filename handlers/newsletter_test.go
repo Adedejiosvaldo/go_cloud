@@ -13,6 +13,7 @@ import (
 
 	"canvas/handlers"
 	"canvas/model"
+	"canvas/storage"
 )
 
 type signupperMock struct {
@@ -27,7 +28,7 @@ func (s *signupperMock) SignupForNewsletter(ctx context.Context, email model.Ema
 func TestNewsletterSignup(t *testing.T) {
 	mux := chi.NewMux()
 	s := &signupperMock{}
-	handlers.NewsLetterSignup(mux, s)
+	handlers.NewsLetterSignup(mux, &storage.Database{})
 
 	t.Run("signs up a valid email address", func(t *testing.T) {
 		is := is.New(t)

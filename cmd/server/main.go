@@ -4,15 +4,18 @@ package main
 
 import (
 	"canvas/server"
+	"canvas/storage"
 	"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+	"maragu.dev/env"
 )
 
 // release is set through the linker at build time, generally from a git sha.
@@ -25,7 +28,9 @@ func main() {
 }
 
 func start() int {
-	logEnv := getStringOrDefaultValue("LOG_ENV", "development")
+	_ = env.Load()
+
+	logEnv := env.GetStringOrDefault("LOG_ENV", "development")
 
 	log, err := createLogger(logEnv)
 	if err != nil {
@@ -39,10 +44,10 @@ func start() int {
 		_ = log.Sync()
 	}()
 
-	host := getStringOrDefaultValue("HOST", "")
-	port := getIntOrDefaultValue("PORT", 8080)
+	host := env.GetStringOrDefault("HOST", "")
+	port := env.GetIntOrDefault("PORT", 8080)
 
-	s := server.New(server.Options{Host: host, Port: port, Log: log})
+	s := server.New(server.Options{Host: host, Port: port, Log: log, Database: createDatabase(log)})
 
 	// That function makes sure to cancel the returned context if it receives one of the signals we have asked for.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
@@ -93,6 +98,20 @@ func createLogger(env string) (*zap.Logger, error) {
 		return zap.NewNop(), nil
 	}
 
+}
+
+func createDatabase(log *zap.Logger) *storage.Database {
+	return storage.NewDatabase(storage.NewDatabaseOptions{
+		Host:                  env.GetStringOrDefault("DB_HOST", "localhost"),
+		Port:                  env.GetIntOrDefault("DB_PORT", 5432),
+		User:                  env.GetStringOrDefault("DB_USER", ""),
+		Password:              env.GetStringOrDefault("DB_PASSWORD", ""),
+		Name:                  env.GetStringOrDefault("DB_NAME", ""),
+		MaxOpenConnections:    env.GetIntOrDefault("DB_MAX_OPEN_CONNECTIONS", 10),
+		MaxIdleConnections:    env.GetIntOrDefault("DB_MAX_IDLE_CONNECTIONS", 10),
+		ConnectionMaxLifetime: env.GetDurationOrDefault("DB_CONNECTION_MAX_LIFETIME", time.Hour),
+		Log:                   log,
+	})
 }
 
 // Get Env Variables

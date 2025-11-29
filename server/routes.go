@@ -11,7 +11,7 @@ func (s *Server) SetupRoutes() {
 
 	handlers.FrontPage(s.mux)
 
-	handlers.NewsLetterSignup(s.mux, &signupperMock{})
+	handlers.NewsLetterSignup(s.mux, s.database)
 	handlers.NewsletterThanks(s.mux)
 }
 
