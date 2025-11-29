@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -52,4 +53,31 @@ func NewDatabase(opt NewDatabaseOptions) *Database {
 		connectionMaxIdleTime: opt.ConnectionMaxIdleTime,
 		log:                   opt.Log,
 	}
+}
+
+func (d *Database) Connect() error {
+	d.log.Info("Connecting to the database", zap.String("url", d.createDataSourceName(false)))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var err error
+
+	d.DB, err = sqlx.Connect(ctx, "pgx", d.createDataSourceName(true))
+
+	if err != nil {
+		return err
+	}
+	d.log.Debug("Setting connection pool options",
+		zap.Int("max open connections", d.maxOpenConnections),
+		zap.Int("max idle connections", d.maxIdleConnections),
+		zap.Duration("connection max lifetime", d.connectionMaxLifetime),
+		zap.Duration("connection max idle time", d.connectionMaxIdleTime))
+
+	d.DB.SetMaxOpenConns(d.maxOpenConnections)
+	d.DB.SetMaxIdleConns(d.maxIdleConnections)
+	d.DB.SetConnMaxLifetime(d.connectionMaxLifetime)
+	d.DB.SetConnMaxIdleTime(d.connectionMaxIdleTime)
+
+	return nil
 }
