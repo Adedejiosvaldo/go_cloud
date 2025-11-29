@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -63,7 +64,7 @@ func (d *Database) Connect() error {
 
 	var err error
 
-	d.DB, err = sqlx.Connect(ctx, "pgx", d.createDataSourceName(true))
+	d.DB, err = sqlx.ConnectContext(ctx, "pgx", d.createDataSourceName(true))
 
 	if err != nil {
 		return err
@@ -80,4 +81,12 @@ func (d *Database) Connect() error {
 	d.DB.SetConnMaxIdleTime(d.connectionMaxIdleTime)
 
 	return nil
+}
+
+func (d *Database) createDataSourceName(withPassword bool) string {
+	password := d.password
+	if !withPassword {
+		password = "xxx"
+	}
+	return fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=disable", d.user, password, d.host, d.port, d.name)
 }
