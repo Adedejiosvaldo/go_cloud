@@ -32,7 +32,7 @@ func NewsLetterSignup(mux chi.Router, s signupper, q sender) {
 		}
 
 		// details being sent
-		err = q.Send(r.Context(), m.Message{
+		err = q.Send(r.Context(), model.Message{
 			"job":   "confirmation_email",
 			"email": email.String(),
 			"token": token,
