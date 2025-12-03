@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"canvas/model"
-	"canvas/storage"
 	"canvas/views"
 	"context"
 	"net/http"
@@ -14,7 +13,11 @@ type signupper interface {
 	SignupForNewsletter(ctx context.Context, email model.Email) (string, error)
 }
 
-func NewsLetterSignup(mux chi.Router, s *storage.Database) {
+type sender interface {
+	Send(ctx context.Context, m model.Message) error
+}
+
+func NewsLetterSignup(mux chi.Router, s signupper, q sender) {
 	mux.Post("/newsletter/signup", func(w http.ResponseWriter, r *http.Request) {
 
 		email := model.Email(r.FormValue("email"))
@@ -22,10 +25,22 @@ func NewsLetterSignup(mux chi.Router, s *storage.Database) {
 			http.Error(w, "email is invalid", http.StatusBadRequest)
 		}
 
-		if _, err := s.SignupForNewsLetter(r.Context(), email); err != nil {
+		token, err := s.SignupForNewsletter(r.Context(), email)
+		if err != nil {
 			http.Error(w, "error signing up, refresh to try again", http.StatusBadRequest)
+			return
 		}
 
+		// details being sent
+		err = q.Send(r.Context(), m.Message{
+			"job":   "confirmation_email",
+			"email": email.String(),
+			"token": token,
+		})
+		if err != nil {
+			http.Error(w, "error signing up, refresh to try again", http.StatusBadGateway)
+			return
+		}
 		http.Redirect(w, r, "/newsletter/thanks", http.StatusFound)
 	})
 }
